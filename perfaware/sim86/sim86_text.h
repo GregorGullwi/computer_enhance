@@ -11,3 +11,4 @@
    ======================================================================== */
 
 static void PrintInstruction(instruction Instruction, FILE *Dest);
+static char const* GetRegName(register_access Reg);

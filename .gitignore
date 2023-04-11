@@ -1,0 +1,9 @@
+perfaware/vcproj/x64/
+perfaware/vcproj/sim86gg/x64/
+*.user
+perfaware/vcproj/sim86_shared/x64/
+perfaware/vcproj/.vs/
+perfaware/sim86/x64/
+perfaware/sim86/.vs/
+*.wsuo
+.vs/
