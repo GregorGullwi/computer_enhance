@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <cstring>
+#include <intrin.h> // include header for __popcnt()
 
 #include "sim86_shared.h"
 #include "../sim86_memory.h"
@@ -61,7 +62,16 @@ static segmented_access AllocateMemoryPow2(u32 SizePow2)
 
 static constexpr u16 NumRegisters = 15;
 static constexpr u16 IpRegIndex = 13;
+static constexpr u16 FlagsRegIndex = 14;
 static SingleRegister Registers[NumRegisters];
+static FlagsReg& Flags = Registers[FlagsRegIndex].Flags;
+
+static void PrintFlags(FlagsReg FlagsToPrint)
+{
+	if (FlagsToPrint.Parity != 0) printf("P");
+	if (FlagsToPrint.Zero != 0) printf("Z");
+	if (FlagsToPrint.Sign != 0) printf("S");
+}
 
 static u8* GetAbsoluteAddressFromOperand(instruction Instruction, u8 OperandIndex)
 {
@@ -94,8 +104,9 @@ static u8* GetAbsoluteAddressFromOperand(instruction Instruction, u8 OperandInde
 
 static void ExecuteInstruction(instruction Instruction, segmented_access& IpReg)
 {
-	u32 Flags = Instruction.Flags;
-	u32 W = Flags & Inst_Wide;
+	u32 InstructionFlags = Instruction.Flags;
+	u32 W = InstructionFlags & Inst_Wide;
+	size_t ByteSize = W ? 2 : 1;
 
 	switch (Instruction.Op)
 	{
@@ -103,7 +114,48 @@ static void ExecuteInstruction(instruction Instruction, segmented_access& IpReg)
 	{
 		u8* DstAddr = GetAbsoluteAddressFromOperand(Instruction, 0);
 		u8* SrcAddr = GetAbsoluteAddressFromOperand(Instruction, 1);
-		std::memcpy(DstAddr, SrcAddr, W ? 2 : 1);
+		std::memcpy(DstAddr, SrcAddr, ByteSize);
+	}
+	break;
+	
+	case Op_add:
+	case Op_sub:
+	case Op_cmp:
+	{
+		const FlagsReg PrevFlags = Flags;
+		u8* DstAddr = GetAbsoluteAddressFromOperand(Instruction, 0);
+		u8* SrcAddr = GetAbsoluteAddressFromOperand(Instruction, 1);
+		u32 WorkingMemoryDst = 0;
+		std::memcpy(&WorkingMemoryDst, DstAddr, ByteSize);
+		u32 WorkingMemorySrc = 0;
+		std::memcpy(&WorkingMemorySrc, SrcAddr, ByteSize);
+
+		switch (Instruction.Op)
+		{
+		case Op_add:
+			WorkingMemoryDst += WorkingMemorySrc;
+			break;
+		
+		case Op_sub:
+		case Op_cmp:
+			WorkingMemoryDst -= WorkingMemorySrc;
+			break;
+		}
+
+		Flags.Parity = ((__popcnt(WorkingMemoryDst & 0xff) & 1) == 0);
+		Flags.Zero = (WorkingMemoryDst == 0);
+		Flags.Sign = ((WorkingMemoryDst & 0x8000) != 0);
+
+		if (memcmp(&PrevFlags, &Flags, sizeof(FlagsReg)) != 0)
+		{
+			printf(" flags:");
+			PrintFlags(PrevFlags);
+			printf("->");
+			PrintFlags(Flags);
+		}
+		
+		if (Instruction.Op != Op_cmp)
+			std::memcpy(DstAddr, &WorkingMemoryDst, ByteSize);		
 	}
 	break;
 
@@ -166,11 +218,19 @@ int main(int ArgCount, char** Args)
 			}
 
 			printf("\nFinal registers:\n");
-			for (u32 RegIndex = 1; RegIndex < NumRegisters; ++RegIndex)
+			for (u32 RegIndex = 1; RegIndex < NumRegisters - 1; ++RegIndex)
 			{
 				const char* RegName = GetRegName({ RegIndex, 0, 2 });
-				printf("\t%s: 0x%04x (%d)\n", RegName, Registers[RegIndex].wide, Registers[RegIndex].wide);
+				if (Registers[RegIndex].wide == 0)
+					continue;
+
+				printf("%8s: 0x%04x (%d)\n", RegName, Registers[RegIndex].wide, Registers[RegIndex].wide);
 			}
+
+			printf("%8s: ", "flags");
+			PrintFlags(Flags);
+			printf("\n");
+
 		}
 		else
 		{
