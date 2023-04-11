@@ -102,7 +102,7 @@ static u8* GetAbsoluteAddressFromOperand(instruction Instruction, u8 OperandInde
 	return nullptr;
 }
 
-static void ExecuteInstruction(instruction Instruction, segmented_access& IpReg)
+static void ExecuteInstruction(instruction Instruction)
 {
 	u32 InstructionFlags = Instruction.Flags;
 	u32 W = InstructionFlags & Inst_Wide;
@@ -159,6 +159,16 @@ static void ExecuteInstruction(instruction Instruction, segmented_access& IpReg)
 	}
 	break;
 
+	case Op_jne:
+	{
+		if (!Flags.Zero)
+		{
+			assert(Instruction.Operands[0].Type == Operand_Immediate);
+			Registers[IpRegIndex].wide += Instruction.Operands[0].Immediate.Value;
+		}
+	}
+	break;
+
 	default:
 		printf("Unhandled op code");
 		break;
@@ -167,29 +177,20 @@ static void ExecuteInstruction(instruction Instruction, segmented_access& IpReg)
 
 static void DisAsm8086(u32 DisAsmByteCount, segmented_access DisAsmStart)
 {
+	instruction_table Table = Get8086InstructionTable();
 	segmented_access IpReg = DisAsmStart;
 
-	instruction_table Table = Get8086InstructionTable();
-
-	u32 Count = DisAsmByteCount;
-	while (Count)
+	do
 	{
+		IpReg.SegmentOffset = Registers[IpRegIndex].wide;
+
 		instruction Instruction = DecodeInstruction(Table, IpReg);
 		if (Instruction.Op)
 		{
-			if (Count >= Instruction.Size)
-			{
-				IpReg = MoveBaseBy(IpReg, Instruction.Size);
-				Count -= Instruction.Size;
-			}
-			else
-			{
-				fprintf(stderr, "ERROR: Instruction extends outside disassembly region\n");
-				break;
-			}
+			Registers[IpRegIndex].wide += Instruction.Size;
 
 			PrintInstruction(Instruction, stdout);
-			ExecuteInstruction(Instruction, IpReg);
+			ExecuteInstruction(Instruction);
 			printf("\n");
 		}
 		else
@@ -197,7 +198,7 @@ static void DisAsm8086(u32 DisAsmByteCount, segmented_access DisAsmStart)
 			fprintf(stderr, "ERROR: Unrecognized binary in instruction stream.\n");
 			break;
 		}
-	}
+	} while (Registers[IpRegIndex].wide < DisAsmByteCount);
 }
 
 int main(int ArgCount, char** Args)
