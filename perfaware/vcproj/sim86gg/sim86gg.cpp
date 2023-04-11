@@ -107,6 +107,7 @@ static void ExecuteInstruction(instruction Instruction)
 	u32 InstructionFlags = Instruction.Flags;
 	u32 W = InstructionFlags & Inst_Wide;
 	size_t ByteSize = W ? 2 : 1;
+	const FlagsReg PrevFlags = Flags;
 
 	switch (Instruction.Op)
 	{
@@ -122,7 +123,6 @@ static void ExecuteInstruction(instruction Instruction)
 	case Op_sub:
 	case Op_cmp:
 	{
-		const FlagsReg PrevFlags = Flags;
 		u8* DstAddr = GetAbsoluteAddressFromOperand(Instruction, 0);
 		u8* SrcAddr = GetAbsoluteAddressFromOperand(Instruction, 1);
 		u32 WorkingMemoryDst = 0;
@@ -145,14 +145,6 @@ static void ExecuteInstruction(instruction Instruction)
 		Flags.Parity = ((__popcnt(WorkingMemoryDst & 0xff) & 1) == 0);
 		Flags.Zero = (WorkingMemoryDst == 0);
 		Flags.Sign = ((WorkingMemoryDst & 0x8000) != 0);
-
-		if (memcmp(&PrevFlags, &Flags, sizeof(FlagsReg)) != 0)
-		{
-			printf(" flags:");
-			PrintFlags(PrevFlags);
-			printf("->");
-			PrintFlags(Flags);
-		}
 		
 		if (Instruction.Op != Op_cmp)
 			std::memcpy(DstAddr, &WorkingMemoryDst, ByteSize);		
@@ -160,8 +152,9 @@ static void ExecuteInstruction(instruction Instruction)
 	break;
 
 	case Op_jne:
+	case Op_je:
 	{
-		if (!Flags.Zero)
+		if (Flags.Zero == (Instruction.Op == Op_je))
 		{
 			assert(Instruction.Operands[0].Type == Operand_Immediate);
 			Registers[IpRegIndex].wide += Instruction.Operands[0].Immediate.Value;
@@ -170,8 +163,16 @@ static void ExecuteInstruction(instruction Instruction)
 	break;
 
 	default:
-		printf("Unhandled op code");
+		printf("; Unhandled op code");
 		break;
+	}
+
+	if (memcmp(&PrevFlags, &Flags, sizeof(FlagsReg)) != 0)
+	{
+		printf(" flags:");
+		PrintFlags(PrevFlags);
+		printf("->");
+		PrintFlags(Flags);
 	}
 }
 
