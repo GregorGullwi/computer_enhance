@@ -65,6 +65,7 @@ static constexpr u16 IpRegIndex = 13;
 static constexpr u16 FlagsRegIndex = 14;
 static SingleRegister Registers[NumRegisters];
 static FlagsReg& Flags = Registers[FlagsRegIndex].Flags;
+static segmented_access MainMemory = AllocateMemoryPow2(20);
 
 static void PrintFlags(FlagsReg FlagsToPrint)
 {
@@ -87,7 +88,26 @@ static u8* GetAbsoluteAddressFromOperand(instruction Instruction, u8 OperandInde
 	}
 	case Operand_Memory:
 	{
-		break;
+		effective_address_expression Address = Operand.Address;
+
+		segmented_access MemAddress = MainMemory;
+		u16 TargetMemoryOffset = 0;
+		for (u32 Index = 0; Index < ArrayCount(Address.Terms); ++Index)
+		{
+			effective_address_term Term = Address.Terms[Index];
+			register_access Reg = Term.Register;
+
+			if (Reg.Index)
+			{
+				u32 RegMask = 0xffff >> ((2 - Reg.Count) * 0xff);
+				TargetMemoryOffset += (Registers[Reg.Index].wide >> Reg.Offset) & RegMask;
+			}
+
+			TargetMemoryOffset *= Term.Scale;
+		}
+		
+		TargetMemoryOffset += Address.Displacement;
+		return AccessMemory(MemAddress, TargetMemoryOffset);
 	}
 	case Operand_Immediate:
 	{
@@ -176,10 +196,10 @@ static void ExecuteInstruction(instruction Instruction)
 	}
 }
 
-static void DisAsm8086(u32 DisAsmByteCount, segmented_access DisAsmStart)
+static void DisAsm8086(u32 DisAsmByteCount)
 {
 	instruction_table Table = Get8086InstructionTable();
-	segmented_access IpReg = DisAsmStart;
+	segmented_access IpReg = MainMemory;
 
 	do
 	{
@@ -204,7 +224,6 @@ static void DisAsm8086(u32 DisAsmByteCount, segmented_access DisAsmStart)
 
 int main(int ArgCount, char** Args)
 {
-	segmented_access MainMemory = AllocateMemoryPow2(20);
 	if (IsValid(MainMemory))
 	{
 		if (ArgCount > 1)
@@ -216,7 +235,7 @@ int main(int ArgCount, char** Args)
 
 				printf("; %s disassembly:\n", FileName);
 				printf("bits 16\n");
-				DisAsm8086(BytesRead, MainMemory);
+				DisAsm8086(BytesRead);
 			}
 
 			printf("\nFinal registers:\n");
