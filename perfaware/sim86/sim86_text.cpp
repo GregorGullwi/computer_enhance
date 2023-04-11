@@ -32,7 +32,7 @@ static char const *GetMnemonic(operation_type Op)
 
 static char const *GetRegName(register_access Reg)
 {
-    char const *Names[][3] =
+    static char const *Names[][3] =
     {
         {"", "", ""},
         {"al", "ah", "ax"},

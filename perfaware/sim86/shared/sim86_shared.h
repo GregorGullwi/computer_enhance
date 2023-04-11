@@ -10,7 +10,9 @@ typedef long long s64;
 
 typedef s32 b32;
 
-static u32 const SIM86_VERSION = 3;
+#define ArrayCount(Array) (sizeof(Array) / sizeof((Array)[0]))
+
+constexpr inline static u32 const SIM86_VERSION = 3;
 typedef enum operation_type : u32
 {
     Op_None,

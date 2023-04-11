@@ -97,7 +97,7 @@ static instruction TryDecode(decode_context *Context, instruction_encoding *Inst
     u32 Bits[Bits_Count] = {};
     b32 Valid = true;
     
-    u64 StartingAddress = GetAbsoluteAddressOf(At);
+    u32 StartingAddress = GetAbsoluteAddressOf(At);
     
     u8 BitsPendingCount = 0;
     u8 BitsPending = 0;
