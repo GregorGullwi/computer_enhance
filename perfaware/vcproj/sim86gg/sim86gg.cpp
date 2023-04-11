@@ -77,7 +77,6 @@ static void PrintFlags(FlagsReg FlagsToPrint)
 static u8* GetAbsoluteAddressFromOperand(instruction Instruction, u8 OperandIndex)
 {
 	instruction_operand Operand = Instruction.Operands[OperandIndex];
-	u32 Mask = 0xffff >> ((2 - Operand.Register.Count) * 0xff);
 
 	switch (Operand.Type)
 	{
