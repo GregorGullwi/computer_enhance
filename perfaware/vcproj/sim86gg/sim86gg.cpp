@@ -61,6 +61,7 @@ static segmented_access AllocateMemoryPow2(u32 SizePow2)
 }
 
 static constexpr u16 NumRegisters = 15;
+static constexpr u16 CxRegIndex = 3;
 static constexpr u16 IpRegIndex = 13;
 static constexpr u16 FlagsRegIndex = 14;
 static SingleRegister Registers[NumRegisters];
@@ -181,6 +182,19 @@ static void ExecuteInstruction(instruction Instruction)
 	}
 	break;
 
+	case Op_loop:
+	{
+		const u16 WorkingMemory = Registers[CxRegIndex].wide - 1;
+		Registers[CxRegIndex].wide = WorkingMemory;
+
+		if (WorkingMemory > 0)
+		{
+			assert(Instruction.Operands[0].Type == Operand_Immediate);
+			Registers[IpRegIndex].wide += Instruction.Operands[0].Immediate.Value;
+		}
+	}
+	break;
+
 	default:
 		printf("; Unhandled op code");
 		break;
@@ -223,42 +237,65 @@ static void DisAsm8086(u32 DisAsmByteCount)
 
 int main(int ArgCount, char** Args)
 {
-	if (IsValid(MainMemory))
-	{
-		if (ArgCount > 1)
-		{
-			for (int ArgIndex = 1; ArgIndex < ArgCount; ++ArgIndex)
-			{
-				char* FileName = Args[ArgIndex];
-				u32 BytesRead = LoadMemoryFromFile(FileName, MainMemory, 0);
-
-				printf("; %s disassembly:\n", FileName);
-				printf("bits 16\n");
-				DisAsm8086(BytesRead);
-			}
-
-			printf("\nFinal registers:\n");
-			for (u32 RegIndex = 1; RegIndex < NumRegisters - 1; ++RegIndex)
-			{
-				const char* RegName = GetRegName({ RegIndex, 0, 2 });
-				if (Registers[RegIndex].wide == 0)
-					continue;
-
-				printf("%8s: 0x%04x (%d)\n", RegName, Registers[RegIndex].wide, Registers[RegIndex].wide);
-			}
-
-			printf("%8s: ", "flags");
-			PrintFlags(Flags);
-			printf("\n");
-
-		}
-		else
-		{
-			fprintf(stderr, "USAGE: %s [8086 machine code file] ...\n", Args[0]);
-		}
-	}
-	else
+	if (!IsValid(MainMemory))
 	{
 		fprintf(stderr, "ERROR: Unable to allow main memory for 8086.\n");
+		return 0;
+	}
+
+	bool DumpMemory = false;
+	char* FileName = nullptr;
+	if (ArgCount > 1)
+	{
+		for (int ArgIndex = 1; ArgIndex < ArgCount; ++ArgIndex)
+		{
+			if (Args[ArgIndex][0] != '-')
+			{
+				FileName = Args[ArgIndex];
+			}
+			else if (strcmp(Args[ArgIndex], "-dump") == 0)
+			{
+				DumpMemory = true;
+			}
+			else
+			{
+				fprintf(stderr, "ERROR: Unrecognized argument %s.\n", Args[ArgIndex]);
+			}
+		}
+	}
+
+	if (!FileName)
+	{
+		fprintf(stderr, "USAGE: %s [8086 machine code file] [-dump] ...\n", Args[0]);
+		return 0;
+	}
+
+	u32 BytesRead = LoadMemoryFromFile(FileName, MainMemory, 0);
+
+	printf("; %s disassembly:\n", FileName);
+	printf("bits 16\n");
+	DisAsm8086(BytesRead);
+
+	printf("\nFinal registers:\n");
+	for (u32 RegIndex = 1; RegIndex < NumRegisters - 1; ++RegIndex)
+	{
+		const char* RegName = GetRegName({ RegIndex, 0, 2 });
+		if (Registers[RegIndex].wide == 0)
+			continue;
+
+		printf("%8s: 0x%04x (%d)\n", RegName, Registers[RegIndex].wide, Registers[RegIndex].wide);
+	}
+
+	printf("%8s: ", "flags");
+	PrintFlags(Flags);
+	printf("\n");
+
+	if (DumpMemory)
+	{
+		FILE* fout = nullptr;
+		fopen_s(&fout, "sim86_memory_0.data", "wb");
+		fwrite(MainMemory.Memory, 1, MainMemory.Mask + 1, fout);
+		fclose(fout);
+		fout = nullptr;
 	}
 }
