@@ -8,6 +8,8 @@ However, should you wish to use this code as a starting point for future homewor
 
 **Part1_0_SlowDecode**: No simulation, just decoding. The decoding works directly off a transcription of the table from the 8086 manual, with no attempt to accelerate it, so decoding is quite slow (compared to what we could expect if we used a lookup). After instructions are decoded, they are printed to the console in Intel ASM syntax. This decoder is only tested to guarantee binary-exact reassembly up through [ASM listing 42](../part1/listing_0042_completionist_decode.asm), and may fail on 8086 machine code not covered by those tests.
 
+**Part1_1_SlowExec**: Adds simulation and cycle count estimation. This update also included minor fixes to the instruction decoder as issues from users were reported and resolved.
+
 ### Building:
 
 The code is structured such that compiling `sim86.cpp` with any compiler should produce a usable console program, no build tools necessary. For example, to build the program with MSVC you would do:
@@ -40,5 +42,8 @@ If you would like to do some of the homework using this decoder as a DLL, you ca
 * [contrib_json](./shared/contrib_nodejs): node.js wrapper provided by [Jeremy English](https://github.com/jeng)
 * [contrib_zig](./shared/contrib_zig): Zig wrapper provided by [Jorge Henriquez](https://github.com/penguingovernor)
 * [contrib_rust](./shared/contrib_rust): Rust wrapper provided by [Robert Vally](https://github.com/shiver)
+* [contrib_jai](./shared/contrib_jai): JAI wrapper provided by [Tomasz Różański](https://github.com/tomasz-rozanski) and [Raphael Luba](https://github.com/rluba)
+* [contrib_ruby](./shared/contrib_ruby): Ruby wrapper provided by [David Grayson](https://github.com/DavidEGrayson)
+* [contrib_webassembly](./shared/contrib_webassembly): WebAssembly wrapper provided by [Gaurav Gautam](https://github.com/gautam1168)
 
 \- Casey
