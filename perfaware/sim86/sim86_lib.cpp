@@ -10,9 +10,7 @@
    
    ======================================================================== */
 
-#include <assert.h>
-#include <memory.h>
-#include <stdio.h>
+#define assert(...)
 
 #include "sim86.h"
 
@@ -20,13 +18,12 @@
 #include "sim86_instruction_table.h"
 #include "sim86_memory.h"
 #include "sim86_decode.h"
-#include "sim86_text.h"
 
 #include "sim86_instruction.cpp"
 #include "sim86_instruction_table.cpp"
 #include "sim86_memory.cpp"
 #include "sim86_decode.cpp"
-#include "sim86_text.cpp"
+#include "sim86_text_table.cpp"
 
 extern "C" u32 Sim86_GetVersion(void)
 {
@@ -44,7 +41,13 @@ extern "C" void Sim86_Decode8086Instruction(u32 SourceSize, u8 *Source, instruct
     u8 GuardBuffer[16] = {};
     if(SourceSize < Table.MaxInstructionByteCount)
     {
-        memcpy(GuardBuffer, Source, SourceSize);
+        // NOTE(casey): I replaced the memcpy here with a manual copy to make it easier for
+        // people compiling on things like WebAssembly who do not want to use Emscripten.
+        for(u32 I = 0; I < SourceSize; ++I)
+        {
+            GuardBuffer[I] = Source[I];
+        }
+        
         Source = GuardBuffer;
     }
     
