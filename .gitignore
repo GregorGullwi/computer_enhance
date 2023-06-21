@@ -7,3 +7,4 @@ perfaware/sim86/x64/
 perfaware/sim86/.vs/
 *.wsuo
 .vs/
+*.tlog
