@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sim86_shared", "sim86_share
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sim86gg", "sim86gg\sim86gg.vcxproj", "{0D9EF3A5-99E1-44DC-9E28-B0F8A8C10B89}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "json_parser", "json_parser\json_parser.vcxproj", "{4201A2F7-B8D4-4FC8-99F7-73D0D3215BEA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -41,6 +43,14 @@ Global
 		{0D9EF3A5-99E1-44DC-9E28-B0F8A8C10B89}.Release|x64.Build.0 = Release|x64
 		{0D9EF3A5-99E1-44DC-9E28-B0F8A8C10B89}.Release|x86.ActiveCfg = Release|Win32
 		{0D9EF3A5-99E1-44DC-9E28-B0F8A8C10B89}.Release|x86.Build.0 = Release|Win32
+		{4201A2F7-B8D4-4FC8-99F7-73D0D3215BEA}.Debug|x64.ActiveCfg = Debug|x64
+		{4201A2F7-B8D4-4FC8-99F7-73D0D3215BEA}.Debug|x64.Build.0 = Debug|x64
+		{4201A2F7-B8D4-4FC8-99F7-73D0D3215BEA}.Debug|x86.ActiveCfg = Debug|Win32
+		{4201A2F7-B8D4-4FC8-99F7-73D0D3215BEA}.Debug|x86.Build.0 = Debug|Win32
+		{4201A2F7-B8D4-4FC8-99F7-73D0D3215BEA}.Release|x64.ActiveCfg = Release|x64
+		{4201A2F7-B8D4-4FC8-99F7-73D0D3215BEA}.Release|x64.Build.0 = Release|x64
+		{4201A2F7-B8D4-4FC8-99F7-73D0D3215BEA}.Release|x86.ActiveCfg = Release|Win32
+		{4201A2F7-B8D4-4FC8-99F7-73D0D3215BEA}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
