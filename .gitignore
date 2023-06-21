@@ -8,3 +8,7 @@ perfaware/sim86/.vs/
 *.wsuo
 .vs/
 *.tlog
+*.obj
+*.ilk
+*.idb
+*.log
