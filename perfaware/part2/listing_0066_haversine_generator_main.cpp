@@ -96,7 +96,7 @@ static f64 RandomInRange(random_series *Series, f64 Min, f64 Max)
     return Result;
 }
 
-static FILE *Open(long long unsigned PairCount, char *Label, char *Extension)
+static FILE *Open(long long unsigned PairCount, char const *Label, char const *Extension)
 {
     char Temp[256];
     sprintf(Temp, "data_%llu_%s.%s", PairCount, Label, Extension);
@@ -140,7 +140,7 @@ int main(int ArgCount, char **Args)
         f64 XRadius = MaxAllowedX;
         f64 YRadius = MaxAllowedY;
         
-        char *MethodName = Args[1];
+        char const *MethodName = Args[1];
         if(strcmp(MethodName, "cluster") == 0)
         {
             ClusterCountLeft = 0;
@@ -188,7 +188,7 @@ int main(int ArgCount, char **Args)
                     
                     Sum += SumCoef*HaversineDistance;
                     
-                    char *JSONSep = (PairIndex == (PairCount - 1)) ? "\n" : ",\n";
+                    char const *JSONSep = (PairIndex == (PairCount - 1)) ? "\n" : ",\n";
                     fprintf(FlexJSON, "    {\"x0\":%.16f, \"y0\":%.16f, \"x1\":%.16f, \"y1\":%.16f}%s", X0, Y0, X1, Y1, JSONSep);
                     
                     fwrite(&HaversineDistance, sizeof(HaversineDistance), 1, HaverAnswers);
